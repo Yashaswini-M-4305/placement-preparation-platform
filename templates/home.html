@@ -1,31 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Placement Prep Platform</title>
-</head>
-<body>
-    <h1>Placement Preparation Platform</h1>
-    <p>Day 1 setup successful 🎉</p>
-    <h1>Placement Preparation Platform</h1>
-<a href="/signup">Signup</a> |
-<a href="/login">Login</a> |
-<a href="/logout">Logout</a>
 {% extends "base.html" %}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
 <div class="text-center">
-    <h1 class="mb-3">Placement Preparation Platform</h1>
-    <p class="text-muted">Track DSA, practice daily, crack placements 🚀</p>
+    <h1 class="fw-bold">Placement Preparation Platform</h1>
+    <p class="text-muted mt-3">
+        Track DSA, practice daily, crack placements 🚀
+    </p>
 
     <div class="mt-4">
-        <a href="/signup" class="btn btn-primary btn-lg me-2">Get Started</a>
+        <a href="/signup" class="btn btn-primary btn-lg me-3">Get Started</a>
         <a href="/login" class="btn btn-outline-secondary btn-lg">Login</a>
     </div>
 </div>
 {% endblock %}
-
-
-</body>
-</html>
