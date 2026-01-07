@@ -4,29 +4,40 @@
 
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-md-4">
-    <div class="card shadow">
-      <div class="card-body">
-        <h3 class="text-center mb-3">Create Account</h3>
+    <div class="col-md-6">
+        <div class="card shadow border-0">
+            <div class="card-body p-4">
+                <h3 class="text-center text-primary fw-bold mb-4">
+                    Create Account
+                </h3>
 
-        <form method="POST">
-          <div class="mb-3">
-            <input type="email" name="email" class="form-control" placeholder="Email" required>
-          </div>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
 
-          <div class="mb-3">
-            <input type="password" name="password" class="form-control" placeholder="Password" required>
-          </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
 
-          <button class="btn btn-primary w-100">Signup</button>
-        </form>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
 
-        <p class="text-center mt-3">
-          Already have an account?
-          <a href="/login">Login</a>
-        </p>
-      </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        Sign Up
+                    </button>
+                </form>
+
+                <p class="text-center mt-3">
+                    Already have an account?
+                    <a href="/login">Login</a>
+                </p>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
