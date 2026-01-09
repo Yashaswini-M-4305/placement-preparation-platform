@@ -3,6 +3,12 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h2 class="fw-bold">Dashboard</h2>
-<p>Welcome, {{ session["user"] }} 👋</p>
+<div class="card shadow p-4">
+    <h2 class="fw-bold text-primary">Dashboard</h2>
+    <p class="mt-3">Welcome, {{ session["user"] }} 👋</p>
+
+    <a href="/logout" class="btn btn-danger mt-3">
+        Logout
+    </a>
+</div>
 {% endblock %}

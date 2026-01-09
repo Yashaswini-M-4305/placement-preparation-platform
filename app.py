@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import flash
+
 
 app = Flask(__name__)
 app.secret_key = "secret_key_here"
@@ -37,15 +39,18 @@ def signup():
         password = generate_password_hash(request.form["password"])
 
         if User.query.filter_by(email=email).first():
-            return "User already exists"
+            flash("User already exists", "danger")
+            return redirect(url_for("signup"))
 
         user = User(email=email, password=password)
         db.session.add(user)
         db.session.commit()
 
+        flash("Account created successfully! Please login.", "success")
         return redirect(url_for("login"))
 
     return render_template("signup.html")
+
 
 # =====================
 # Login
@@ -60,11 +65,14 @@ def login():
 
         if user and check_password_hash(user.password, password):
             session["user"] = user.email
+            flash("Login successful!", "success")
             return redirect(url_for("dashboard"))
 
-        return "Invalid credentials"
+        flash("Invalid email or password", "danger")
+        return redirect(url_for("login"))
 
     return render_template("login.html")
+
 
 # =====================
 # Dashboard (Protected)
@@ -81,7 +89,9 @@ def dashboard():
 @app.route("/logout")
 def logout():
     session.pop("user", None)
+    flash("Logged out successfully", "info")
     return redirect(url_for("login"))
+
 
 # =====================
 # Run App
