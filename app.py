@@ -39,18 +39,18 @@ def signup():
         password = generate_password_hash(request.form["password"])
 
         if User.query.filter_by(email=email).first():
-            flash("User already exists", "danger")
+            flash("Email already exists. Please login instead.", "danger")
             return redirect(url_for("signup"))
 
         user = User(email=email, password=password)
         db.session.add(user)
         db.session.commit()
 
-        flash("Account created successfully! Please login.", "success")
-        return redirect(url_for("login"))
+        session["user"] = user.email
+        flash("Account created successfully!", "success")
+        return redirect(url_for("dashboard"))
 
     return render_template("signup.html")
-
 
 # =====================
 # Login
