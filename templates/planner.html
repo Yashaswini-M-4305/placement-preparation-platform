@@ -4,12 +4,67 @@
 {% block content %}
 <h2 class="mb-4">📅 Daily Study Planner</h2>
 
-<div class="card p-3 shadow-sm">
-  <ul class="list-group">
-    <li class="list-group-item">Day 1 – Arrays</li>
-    <li class="list-group-item">Day 2 – Strings</li>
-    <li class="list-group-item">Day 3 – Linked List</li>
-    <li class="list-group-item">Day 4 – Stack & Queue</li>
+<!-- Date Selector -->
+<form method="GET" class="mb-3">
+  <input
+    type="date"
+    name="date"
+    value="{{ selected_date }}"
+    class="form-control w-25"
+    onchange="this.form.submit()"
+  >
+</form>
+
+<!-- Add Task -->
+<form method="POST" action="{{ url_for('add_plan') }}" class="d-flex mb-3">
+  <input type="hidden" name="date" value="{{ selected_date }}">
+  <input
+    type="text"
+    name="task"
+    class="form-control me-2"
+    placeholder="Enter today's task"
+    required
+  >
+  <button class="btn btn-primary">Add</button>
+</form>
+
+<!-- Tasks List -->
+<div class="card shadow-sm">
+  <ul class="list-group list-group-flush">
+    {% if plans %}
+      {% for plan in plans %}
+        <li class="list-group-item d-flex align-items-center">
+          <input
+            type="checkbox"
+            class="form-check-input me-2"
+            {% if plan.completed %}checked{% endif %}
+            onchange="togglePlan({{ plan.id }})"
+          >
+          <span
+            id="task-{{ plan.id }}"
+            {% if plan.completed %}style="text-decoration: line-through; color: gray;"{% endif %}
+          >
+            {{ plan.task }}
+          </span>
+        </li>
+      {% endfor %}
+    {% else %}
+      <li class="list-group-item text-muted">
+        No tasks for this day
+      </li>
+    {% endif %}
   </ul>
 </div>
+
+<script>
+function togglePlan(id) {
+  fetch("/toggle-plan", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: "id=" + id
+  }).then(() => location.reload());
+}
+</script>
 {% endblock %}
