@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import date
 
 # =====================
 # App Config
@@ -59,6 +60,13 @@ class DSATopic(db.Model):
     topic = db.Column(db.String(50), nullable=False)
     completed = db.Column(db.Boolean, default=False)
     user_email = db.Column(db.String(100), nullable=False)
+
+class DailyPlan(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.String(20))
+    task = db.Column(db.String(200))
+    completed = db.Column(db.Boolean, default=False)
+    user_email = db.Column(db.String(100))
 
 # =====================
 # Home
@@ -198,3 +206,48 @@ if __name__ == "__main__":
         db.create_all()
     app.run(debug=True)
 
+@app.route("/planner")
+def planner():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    selected_date = request.args.get("date", str(date.today()))
+
+    plans = DailyPlan.query.filter_by(
+        user_email=session["user"],
+        date=selected_date
+    ).all()
+
+    return render_template(
+        "planner.html",
+        plans=plans,
+        selected_date=selected_date
+    )
+
+
+@app.route("/add-plan", methods=["POST"])
+def add_plan():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    task = request.form["task"]
+    date_selected = request.form["date"]
+
+    plan = DailyPlan(
+        task=task,
+        date=date_selected,
+        user_email=session["user"]
+    )
+
+    db.session.add(plan)
+    db.session.commit()
+
+    return redirect(url_for("planner", date=date_selected))
+
+@app.route("/toggle-plan", methods=["POST"])
+def toggle_plan():
+    plan_id = request.form["id"]
+    plan = DailyPlan.query.get(plan_id)
+    plan.completed = not plan.completed
+    db.session.commit()
+    return "OK"
