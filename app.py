@@ -201,11 +201,6 @@ def logout():
 # =====================
 # Run App
 # =====================
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
-
 @app.route("/planner")
 def planner():
     if "user" not in session:
@@ -223,6 +218,7 @@ def planner():
         plans=plans,
         selected_date=selected_date
     )
+
 
 
 @app.route("/add-plan", methods=["POST"])
@@ -251,3 +247,11 @@ def toggle_plan():
     plan.completed = not plan.completed
     db.session.commit()
     return "OK"
+
+
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
+
+

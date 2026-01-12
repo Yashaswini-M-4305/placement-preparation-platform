@@ -2,47 +2,14 @@
 {% block title %}Daily Planner{% endblock %}
 
 {% block content %}
+<h2 class="mb-4">📅 Daily Study Planner</h2>
 
-<h3 class="mb-3">📅 Daily Study Planner</h3>
-
-<form method="get" class="mb-3">
-  <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
-</form>
-
-<form method="post" action="/add-plan" class="mb-3">
-  <input type="hidden" name="date" value="{{ selected_date }}">
-  <div class="input-group">
-    <input class="form-control" name="task" placeholder="Add today's goal..." required>
-    <button class="btn btn-primary">Add</button>
-  </div>
-</form>
-
-<div class="card p-3">
-  {% if plans %}
-    {% for p in plans %}
-      <div class="form-check">
-        <input class="form-check-input"
-               type="checkbox"
-               {% if p.completed %}checked{% endif %}
-               onchange="togglePlan({{ p.id }})">
-        <label class="form-check-label {% if p.completed %}text-decoration-line-through{% endif %}">
-          {{ p.task }}
-        </label>
-      </div>
-    {% endfor %}
-  {% else %}
-    <p class="text-muted">No goals for this day</p>
-  {% endif %}
+<div class="card p-3 shadow-sm">
+  <ul class="list-group">
+    <li class="list-group-item">Day 1 – Arrays</li>
+    <li class="list-group-item">Day 2 – Strings</li>
+    <li class="list-group-item">Day 3 – Linked List</li>
+    <li class="list-group-item">Day 4 – Stack & Queue</li>
+  </ul>
 </div>
-
-<script>
-function togglePlan(id) {
-  fetch("/toggle-plan", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `id=${id}`
-  }).then(() => location.reload());
-}
-</script>
-
 {% endblock %}
