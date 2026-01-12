@@ -1,84 +1,68 @@
 {% extends "base.html" %}
-
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h2 class="fw-bold mb-4">
-    Welcome, {{ session["user"] }} 👋
-</h2>
 
-<div id="dsa-tracker">
-    <div class="form-check">
-        <input class="form-check-input dsa-checkbox" type="checkbox">
-        <label class="form-check-label">Arrays</label>
+<h2 class="mb-4">Welcome, {{ session["user"] }} 👋</h2>
+
+<div class="row">
+  <!-- DSA Tracker -->
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3 mb-4">
+      <h4 class="text-primary">DSA Preparation Tracker</h4>
+
+      {% if topics %}
+        {% for topic in topics %}
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              {% if topic.completed %}checked{% endif %}
+              onchange="updateTopic({{ topic.id }}, this.checked)"
+            >
+            <label class="form-check-label">
+              {{ topic.topic }}
+            </label>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">No topics found</p>
+      {% endif %}
     </div>
+  </div>
 
-    <div class="form-check">
-        <input class="form-check-input dsa-checkbox" type="checkbox">
-        <label class="form-check-label">Strings</label>
-    </div>
+  <!-- Progress -->
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h4 class="text-success">Overall Progress</h4>
 
-    <div class="form-check">
-        <input class="form-check-input dsa-checkbox" type="checkbox">
-        <label class="form-check-label">Linked List</label>
-    </div>
-
-    <div class="form-check">
-        <input class="form-check-input dsa-checkbox" type="checkbox">
-        <label class="form-check-label">Stack & Queue</label>
-    </div>
-
-    <div class="form-check">
-        <input class="form-check-input dsa-checkbox" type="checkbox">
-        <label class="form-check-label">Trees</label>
-    </div>
-
-    <div class="form-check">
-        <input class="form-check-input dsa-checkbox" type="checkbox">
-        <label class="form-check-label">Graphs</label>
-    </div>
-</div>
-
-
-    <!-- Progress -->
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="fw-bold text-success mb-3">
-                    Overall Progress
-                </h5>
-
-                <div class="progress" style="height: 25px;">
-                    <div id="progress-bar"
-                         class="progress-bar progress-bar-striped progress-bar-animated"
-                         style="width: 0%">
-                        0%
-                    </div>
-                </div>  
-
-                <p class="text-muted mt-3">
-                    Keep going! Consistency beats talent 💪
-                </p>
-            </div>
+      <div class="progress mb-3">
+        <div
+          class="progress-bar progress-bar-striped progress-bar-animated"
+          style="width: {{ progress }}%"
+        >
+          {{ progress }}%
         </div>
+      </div>
+
+      <p>Keep going! Consistency beats talent 💪</p>
     </div>
+  </div>
 </div>
+
 <script>
-    const checkboxes = document.querySelectorAll('.dsa-checkbox');
-    const progressBar = document.getElementById('progress-bar');
-
-    function updateProgress() {
-        const total = checkboxes.length;
-        const checked = document.querySelectorAll('.dsa-checkbox:checked').length;
-        const percent = Math.round((checked / total) * 100);
-
-        progressBar.style.width = percent + "%";
-        progressBar.innerText = percent + "%";
-    }
-
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', updateProgress);
-    });
+function updateTopic(id, completed) {
+  fetch("/update-topic", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: `id=${id}&completed=${completed}`
+  }).then(() => {
+    location.reload();   // 🔥 THIS LINE FIXES EVERYTHING
+  });
+}
 </script>
+
 
 {% endblock %}

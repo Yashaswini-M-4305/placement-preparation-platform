@@ -1,24 +1,47 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import flash
 
-
+# =====================
+# App Config
+# =====================
 app = Flask(__name__)
 app.secret_key = "secret_key_here"
 
-# Database config
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 # =====================
-# User Model
+# DSA Topics (Global)
+# =====================
+DSA_TOPICS = [
+    "Arrays",
+    "Strings",
+    "Linked List",
+    "Stack",
+    "Queue",
+    "Recursion",
+    "Binary Search",
+    "Sorting",
+    "Hashing",
+    "Trees",
+    "Graphs"
+]
+
+# =====================
+# Models
 # =====================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
+
+class DSATopic(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topic = db.Column(db.String(50), nullable=False)
+    completed = db.Column(db.Boolean, default=False)
+    user_email = db.Column(db.String(100), nullable=False)
 
 # =====================
 # Home
@@ -38,16 +61,30 @@ def signup():
         email = request.form["email"]
         password = generate_password_hash(request.form["password"])
 
+        # Check existing email
         if User.query.filter_by(email=email).first():
-            flash("Email already exists. Please login instead.", "danger")
+            flash("Email already exists!", "danger")
             return redirect(url_for("signup"))
 
+        # Create user
         user = User(email=email, password=password)
         db.session.add(user)
         db.session.commit()
 
-        session["user"] = user.email
-        flash("Account created successfully!", "success")
+        # Auto add DSA topics
+        for topic in DSA_TOPICS:
+            db.session.add(
+                DSATopic(
+                    topic=topic,
+                    completed=False,
+                    user_email=email
+                )
+            )
+        db.session.commit()
+
+        # Auto login
+        session["user"] = email
+        flash("Account created successfully 🎉", "success")
         return redirect(url_for("dashboard"))
 
     return render_template("signup.html")
@@ -64,24 +101,55 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password, password):
-            session["user"] = user.email
-            flash("Login successful!", "success")
+            session["user"] = email
+            flash("Login successful ✅", "success")
             return redirect(url_for("dashboard"))
 
-        flash("Invalid email or password", "danger")
+        flash("Invalid email or password ❌", "danger")
         return redirect(url_for("login"))
 
     return render_template("login.html")
 
-
 # =====================
-# Dashboard (Protected)
+# Dashboard
 # =====================
 @app.route("/dashboard")
 def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
-    return render_template("dashboard.html")
+
+    topics = DSATopic.query.filter_by(
+        user_email=session["user"]
+    ).all()
+
+    total = len(topics)
+    completed = len([t for t in topics if t.completed])
+    progress = int((completed / total) * 100) if total > 0 else 0
+
+    return render_template(
+        "dashboard.html",
+        topics=topics,
+        progress=progress
+    )
+
+# =====================
+# Update Topic (AJAX)
+# =====================
+@app.route("/update-topic", methods=["POST"])
+def update_topic():
+    if "user" not in session:
+        return "Unauthorized", 401
+
+    topic_id = request.form.get("id")
+    completed = request.form.get("completed") == "true"
+
+    topic = DSATopic.query.get(topic_id)
+    if topic:
+        topic.completed = completed
+        db.session.commit()
+
+    return "OK"
+
 
 # =====================
 # Logout
@@ -89,9 +157,8 @@ def dashboard():
 @app.route("/logout")
 def logout():
     session.pop("user", None)
-    flash("Logged out successfully", "info")
+    flash("Logged out successfully 👋", "info")
     return redirect(url_for("login"))
-
 
 # =====================
 # Run App
