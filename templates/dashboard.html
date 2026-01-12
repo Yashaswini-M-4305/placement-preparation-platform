@@ -3,12 +3,82 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="card shadow p-4">
-    <h2 class="fw-bold text-primary">Dashboard</h2>
-    <p class="mt-3">Welcome, {{ session["user"] }} 👋</p>
+<h2 class="fw-bold mb-4">
+    Welcome, {{ session["user"] }} 👋
+</h2>
 
-    <a href="/logout" class="btn btn-danger mt-3">
-        Logout
-    </a>
+<div id="dsa-tracker">
+    <div class="form-check">
+        <input class="form-check-input dsa-checkbox" type="checkbox">
+        <label class="form-check-label">Arrays</label>
+    </div>
+
+    <div class="form-check">
+        <input class="form-check-input dsa-checkbox" type="checkbox">
+        <label class="form-check-label">Strings</label>
+    </div>
+
+    <div class="form-check">
+        <input class="form-check-input dsa-checkbox" type="checkbox">
+        <label class="form-check-label">Linked List</label>
+    </div>
+
+    <div class="form-check">
+        <input class="form-check-input dsa-checkbox" type="checkbox">
+        <label class="form-check-label">Stack & Queue</label>
+    </div>
+
+    <div class="form-check">
+        <input class="form-check-input dsa-checkbox" type="checkbox">
+        <label class="form-check-label">Trees</label>
+    </div>
+
+    <div class="form-check">
+        <input class="form-check-input dsa-checkbox" type="checkbox">
+        <label class="form-check-label">Graphs</label>
+    </div>
 </div>
+
+
+    <!-- Progress -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="fw-bold text-success mb-3">
+                    Overall Progress
+                </h5>
+
+                <div class="progress" style="height: 25px;">
+                    <div id="progress-bar"
+                         class="progress-bar progress-bar-striped progress-bar-animated"
+                         style="width: 0%">
+                        0%
+                    </div>
+                </div>  
+
+                <p class="text-muted mt-3">
+                    Keep going! Consistency beats talent 💪
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const checkboxes = document.querySelectorAll('.dsa-checkbox');
+    const progressBar = document.getElementById('progress-bar');
+
+    function updateProgress() {
+        const total = checkboxes.length;
+        const checked = document.querySelectorAll('.dsa-checkbox:checked').length;
+        const percent = Math.round((checked / total) * 100);
+
+        progressBar.style.width = percent + "%";
+        progressBar.innerText = percent + "%";
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateProgress);
+    });
+</script>
+
 {% endblock %}
