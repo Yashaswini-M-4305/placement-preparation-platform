@@ -12,6 +12,23 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
+def ensure_topics_for_user(email):
+    existing = DSATopic.query.filter_by(user_email=email).first()
+
+    if existing:
+        return  # topics already exist
+
+    for topic in DSA_TOPICS:
+        db.session.add(
+            DSATopic(
+                topic=topic,
+                completed=False,
+                user_email=email
+            )
+        )
+
+    db.session.commit()
+
 # =====================
 # DSA Topics (Global)
 # =====================
@@ -118,13 +135,16 @@ def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
 
+    # 🔥 FIX FOR OLD USERS
+    ensure_topics_for_user(session["user"])
+
     topics = DSATopic.query.filter_by(
         user_email=session["user"]
     ).all()
 
     total = len(topics)
-    completed = len([t for t in topics if t.completed])
-    progress = int((completed / total) * 100) if total > 0 else 0
+    done = len([t for t in topics if t.completed])
+    progress = int((done / total) * 100) if total > 0 else 0
 
     return render_template(
         "dashboard.html",
@@ -132,23 +152,33 @@ def dashboard():
         progress=progress
     )
 
+
 # =====================
 # Update Topic (AJAX)
 # =====================
 @app.route("/update-topic", methods=["POST"])
 def update_topic():
     if "user" not in session:
-        return "Unauthorized", 401
+        return {"error": "Unauthorized"}, 401
 
-    topic_id = request.form.get("id")
-    completed = request.form.get("completed") == "true"
+    topic_id = request.form["id"]
+    completed = request.form["completed"] == "true"
 
     topic = DSATopic.query.get(topic_id)
-    if topic:
-        topic.completed = completed
-        db.session.commit()
+    topic.completed = completed
+    db.session.commit()
 
-    return "OK"
+    # 🔢 recalculate progress
+    topics = DSATopic.query.filter_by(
+        user_email=session["user"]
+    ).all()
+
+    total = len(topics)
+    done = len([t for t in topics if t.completed])
+    progress = int((done / total) * 100) if total > 0 else 0
+
+    return {"progress": progress}
+
 
 
 # =====================
@@ -167,3 +197,4 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+

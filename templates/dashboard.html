@@ -50,6 +50,16 @@
   </div>
 </div>
 
+<div class="progress mb-3">
+  <div
+    id="progress-bar"
+    class="progress-bar progress-bar-striped progress-bar-animated"
+    style="width: {{ progress }}%"
+  >
+    {{ progress }}%
+  </div>
+</div>
+
 <script>
 function updateTopic(id, completed) {
   fetch("/update-topic", {
@@ -58,11 +68,16 @@ function updateTopic(id, completed) {
       "Content-Type": "application/x-www-form-urlencoded"
     },
     body: `id=${id}&completed=${completed}`
-  }).then(() => {
-    location.reload();   // 🔥 THIS LINE FIXES EVERYTHING
+  })
+  .then(res => res.json())
+  .then(data => {
+    const bar = document.getElementById("progress-bar");
+    bar.style.width = data.progress + "%";
+    bar.innerText = data.progress + "%";
   });
 }
 </script>
+
 
 
 {% endblock %}
