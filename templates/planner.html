@@ -29,32 +29,33 @@
 </form>
 
 <!-- Tasks List -->
-<div class="card shadow-sm">
-  <ul class="list-group list-group-flush">
-    {% if plans %}
-      {% for plan in plans %}
-        <li class="list-group-item d-flex align-items-center">
-          <input
-            type="checkbox"
-            class="form-check-input me-2"
-            {% if plan.completed %}checked{% endif %}
-            onchange="togglePlan({{ plan.id }})"
-          >
-          <span
-            id="task-{{ plan.id }}"
-            {% if plan.completed %}style="text-decoration: line-through; color: gray;"{% endif %}
-          >
-            {{ plan.task }}
-          </span>
-        </li>
-      {% endfor %}
-    {% else %}
-      <li class="list-group-item text-muted">
-        No tasks for this day
-      </li>
-    {% endif %}
-  </ul>
-</div>
+<ul class="list-group">
+  {% for plan in plans %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      
+      <div>
+        <input
+          type="checkbox"
+          {% if plan.completed %}checked{% endif %}
+          onchange="togglePlan({{ plan.id }})"
+        >
+        <span class="{% if plan.completed %}text-decoration-line-through{% endif %}">
+          {{ plan.task }}
+        </span>
+      </div>
+
+      <button
+        class="btn btn-sm btn-outline-danger"
+        onclick="deletePlan({{ plan.id }})"
+      >
+        🗑️
+      </button>
+
+    </li>
+  {% else %}
+    <li class="list-group-item text-muted">No tasks for this day</li>
+  {% endfor %}
+</ul>
 
 <script>
 function togglePlan(id) {
@@ -67,4 +68,30 @@ function togglePlan(id) {
   }).then(() => location.reload());
 }
 </script>
+<script>
+function deletePlan(id) {
+  if (!confirm("Delete this task?")) return;
+
+  fetch("/delete-plan", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: `id=${id}`
+  })
+  .then(res => res.json())
+  .then(() => location.reload());
+}
+
+function togglePlan(id) {
+  fetch("/toggle-plan", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: `id=${id}`
+  });
+}
+</script>
+
 {% endblock %}

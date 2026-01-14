@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date
+from datetime import date, timedelta
 
 # =====================
 # App Config
@@ -12,23 +12,6 @@ app.secret_key = "secret_key_here"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
-
-def ensure_topics_for_user(email):
-    existing = DSATopic.query.filter_by(user_email=email).first()
-
-    if existing:
-        return  # topics already exist
-
-    for topic in DSA_TOPICS:
-        db.session.add(
-            DSATopic(
-                topic=topic,
-                completed=False,
-                user_email=email
-            )
-        )
-
-    db.session.commit()
 
 # =====================
 # DSA Topics (Global)
@@ -68,8 +51,44 @@ class DailyPlan(db.Model):
     completed = db.Column(db.Boolean, default=False)
     user_email = db.Column(db.String(100))
 
+class StudyDay(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.String(20))
+    user_email = db.Column(db.String(100))
+
 # =====================
-# Home
+# Helper Functions
+# =====================
+def ensure_topics_for_user(email):
+    exists = DSATopic.query.filter_by(user_email=email).first()
+    if exists:
+        return
+
+    for topic in DSA_TOPICS:
+        db.session.add(
+            DSATopic(
+                topic=topic,
+                completed=False,
+                user_email=email
+            )
+        )
+    db.session.commit()
+
+def calculate_streak(email):
+    days = StudyDay.query.filter_by(user_email=email).all()
+    dates = set(d.date for d in days)
+
+    streak = 0
+    current = date.today()
+
+    while str(current) in dates:
+        streak += 1
+        current -= timedelta(days=1)
+
+    return streak
+
+# =====================
+# Routes
 # =====================
 @app.route("/")
 def home():
@@ -77,46 +96,30 @@ def home():
         return redirect(url_for("dashboard"))
     return render_template("home.html")
 
-# =====================
-# Signup
-# =====================
+# ---------- Signup ----------
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
         email = request.form["email"]
         password = generate_password_hash(request.form["password"])
 
-        # Check existing email
         if User.query.filter_by(email=email).first():
             flash("Email already exists!", "danger")
             return redirect(url_for("signup"))
 
-        # Create user
         user = User(email=email, password=password)
         db.session.add(user)
         db.session.commit()
 
-        # Auto add DSA topics
-        for topic in DSA_TOPICS:
-            db.session.add(
-                DSATopic(
-                    topic=topic,
-                    completed=False,
-                    user_email=email
-                )
-            )
-        db.session.commit()
+        ensure_topics_for_user(email)
 
-        # Auto login
         session["user"] = email
         flash("Account created successfully 🎉", "success")
         return redirect(url_for("dashboard"))
 
     return render_template("signup.html")
 
-# =====================
-# Login
-# =====================
+# ---------- Login ----------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -135,24 +138,19 @@ def login():
 
     return render_template("login.html")
 
-# =====================
-# Dashboard
-# =====================
+# ---------- Dashboard ----------
 @app.route("/dashboard")
 def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
 
-    # 🔥 FIX FOR OLD USERS
     ensure_topics_for_user(session["user"])
 
-    topics = DSATopic.query.filter_by(
-        user_email=session["user"]
-    ).all()
+    topics = DSATopic.query.filter_by(user_email=session["user"]).all()
 
     total = len(topics)
     done = len([t for t in topics if t.completed])
-    progress = int((done / total) * 100) if total > 0 else 0
+    progress = int((done / total) * 100) if total else 0
 
     today = str(date.today())
     today_plans = DailyPlan.query.filter_by(
@@ -162,20 +160,18 @@ def dashboard():
 
     today_done = len([p for p in today_plans if p.completed])
     today_total = len(today_plans)
+    streak = calculate_streak(session["user"])
 
     return render_template(
         "dashboard.html",
         topics=topics,
         progress=progress,
         today_done=today_done,
-        today_total=today_total
+        today_total=today_total,
+        streak=streak
     )
-   
 
-
-# =====================
-# Update Topic (AJAX)
-# =====================
+# ---------- Update Topic ----------
 @app.route("/update-topic", methods=["POST"])
 def update_topic():
     if "user" not in session:
@@ -188,31 +184,14 @@ def update_topic():
     topic.completed = completed
     db.session.commit()
 
-    # 🔢 recalculate progress
-    topics = DSATopic.query.filter_by(
-        user_email=session["user"]
-    ).all()
-
+    topics = DSATopic.query.filter_by(user_email=session["user"]).all()
     total = len(topics)
     done = len([t for t in topics if t.completed])
-    progress = int((done / total) * 100) if total > 0 else 0
+    progress = int((done / total) * 100) if total else 0
 
     return {"progress": progress}
 
-
-
-# =====================
-# Logout
-# =====================
-@app.route("/logout")
-def logout():
-    session.pop("user", None)
-    flash("Logged out successfully 👋", "info")
-    return redirect(url_for("login"))
-
-# =====================
-# Run App
-# =====================
+# ---------- Planner ----------
 @app.route("/planner")
 def planner():
     if "user" not in session:
@@ -230,8 +209,6 @@ def planner():
         plans=plans,
         selected_date=selected_date
     )
-
-
 
 @app.route("/add-plan", methods=["POST"])
 def add_plan():
@@ -254,16 +231,54 @@ def add_plan():
 
 @app.route("/toggle-plan", methods=["POST"])
 def toggle_plan():
-    plan_id = request.form["id"]
-    plan = DailyPlan.query.get(plan_id)
+    plan = DailyPlan.query.get(request.form["id"])
     plan.completed = not plan.completed
     db.session.commit()
+
+    if plan.completed:
+        today = str(date.today())
+        exists = StudyDay.query.filter_by(
+            user_email=session["user"],
+            date=today
+        ).first()
+
+        if not exists:
+            db.session.add(
+                StudyDay(date=today, user_email=session["user"])
+            )
+            db.session.commit()
+
     return "OK"
 
+# ---------- Logout ----------
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    flash("Logged out successfully 👋", "info")
+    return redirect(url_for("login"))
 
+@app.route("/delete-plan", methods=["POST"])
+def delete_plan():
+    if "user" not in session:
+        return {"error": "Unauthorized"}, 401
+
+    plan_id = request.form["id"]
+
+    plan = DailyPlan.query.get(plan_id)
+
+    # Safety check
+    if not plan or plan.user_email != session["user"]:
+        return {"error": "Not allowed"}, 403
+
+    db.session.delete(plan)
+    db.session.commit()
+
+    return {"status": "deleted"}
+
+# =====================
+# Run App
+# =====================
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
-

@@ -4,6 +4,15 @@
 {% block content %}
 
 <h2 class="mb-4">Welcome, {{ session["user"] }} 👋</h2>
+
+<!-- 🔥 STREAK (DO NOT TOUCH WITH JS) -->
+<div class="badge bg-warning text-dark fs-6 p-3 mb-4">
+  🔥 Study Streak:
+  <strong>{{ streak }}</strong>
+  day{{ 's' if streak != 1 else '' }}
+</div>
+
+
 <div class="row mb-4">
   <div class="col-md-6">
     <div class="card shadow-sm p-3">
@@ -34,52 +43,38 @@
     <div class="card shadow-sm p-3 mb-4">
       <h4 class="text-primary">DSA Preparation Tracker</h4>
 
-      {% if topics %}
-        {% for topic in topics %}
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              {% if topic.completed %}checked{% endif %}
-              onchange="updateTopic({{ topic.id }}, this.checked)"
-            >
-            <label class="form-check-label">
-              {{ topic.topic }}
-            </label>
-          </div>
-        {% endfor %}
-      {% else %}
-        <p class="text-muted">No topics found</p>
-      {% endif %}
+      {% for topic in topics %}
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            {% if topic.completed %}checked{% endif %}
+            onchange="updateTopic({{ topic.id }}, this.checked)"
+          >
+          <label class="form-check-label">
+            {{ topic.topic }}
+          </label>
+        </div>
+      {% endfor %}
     </div>
   </div>
 
-  <!-- Progress -->
+  <!-- 📊 PROGRESS -->
   <div class="col-md-6">
     <div class="card shadow-sm p-3">
       <h4 class="text-success">Overall Progress</h4>
 
       <div class="progress mb-3">
         <div
+          id="progress-bar"
           class="progress-bar progress-bar-striped progress-bar-animated"
-          style="width: {{ progress }}%"
-        >
+          style="width: {{ progress }}%">
           {{ progress }}%
         </div>
       </div>
 
       <p>Keep going! Consistency beats talent 💪</p>
     </div>
-  </div>
-</div>
-
-<div class="progress mb-3">
-  <div
-    id="progress-bar"
-    class="progress-bar progress-bar-striped progress-bar-animated"
-    style="width: {{ progress }}%"
-  >
-    {{ progress }}%
   </div>
 </div>
 
@@ -100,7 +95,5 @@ function updateTopic(id, completed) {
   });
 }
 </script>
-
-
 
 {% endblock %}
