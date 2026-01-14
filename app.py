@@ -154,11 +154,23 @@ def dashboard():
     done = len([t for t in topics if t.completed])
     progress = int((done / total) * 100) if total > 0 else 0
 
+    today = str(date.today())
+    today_plans = DailyPlan.query.filter_by(
+        user_email=session["user"],
+        date=today
+    ).all()
+
+    today_done = len([p for p in today_plans if p.completed])
+    today_total = len(today_plans)
+
     return render_template(
         "dashboard.html",
         topics=topics,
-        progress=progress
+        progress=progress,
+        today_done=today_done,
+        today_total=today_total
     )
+   
 
 
 # =====================

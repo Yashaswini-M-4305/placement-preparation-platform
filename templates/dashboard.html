@@ -4,6 +4,29 @@
 {% block content %}
 
 <h2 class="mb-4">Welcome, {{ session["user"] }} 👋</h2>
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h5>📅 Today's Planner</h5>
+
+      {% if today_total > 0 %}
+        <p class="mb-1">
+          Completed <strong>{{ today_done }}</strong> out of
+          <strong>{{ today_total }}</strong> tasks
+        </p>
+
+        <div class="progress">
+          <div
+            class="progress-bar bg-success"
+            style="width: {{ (today_done / today_total) * 100 }}%">
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted">No tasks planned for today</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
 
 <div class="row">
   <!-- DSA Tracker -->
