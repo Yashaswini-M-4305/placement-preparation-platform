@@ -51,9 +51,13 @@
             {% if topic.completed %}checked{% endif %}
             onchange="updateTopic({{ topic.id }}, this.checked)"
           >
-          <label class="form-check-label">
-            {{ topic.topic }}
-          </label>
+        <label class="form-check-label">
+    <a href="/questions/{{ topic.topic }}" class="text-decoration-none">
+      {{ topic.topic }}
+    </a>
+  </label>
+
+          
         </div>
       {% endfor %}
     </div>

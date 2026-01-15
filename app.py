@@ -30,6 +30,25 @@ DSA_TOPICS = [
     "Graphs"
 ]
 
+DEFAULT_QUESTIONS = {
+"Arrays": [
+    ("Two Sum", "Easy", "https://leetcode.com/problems/two-sum"),
+    ("Best Time to Buy and Sell Stock", "Easy", "https://leetcode.com/problems/best-time-to-buy-and-sell-stock"),
+    ("Maximum Subarray", "Medium", "https://leetcode.com/problems/maximum-subarray"),
+],
+
+"Strings": [
+    ("Valid Palindrome", "Easy", "https://leetcode.com/problems/valid-palindrome"),
+    ("Longest Substring Without Repeating Characters", "Medium",
+     "https://leetcode.com/problems/longest-substring-without-repeating-characters"),
+],
+
+"Linked List": [
+    ("Reverse Linked List", "Easy", "https://leetcode.com/problems/reverse-linked-list"),
+    ("Merge Two Sorted Lists", "Easy", "https://leetcode.com/problems/merge-two-sorted-lists"),
+]
+}
+
 # =====================
 # Models
 # =====================
@@ -51,10 +70,22 @@ class DailyPlan(db.Model):
     completed = db.Column(db.Boolean, default=False)
     user_email = db.Column(db.String(100))
 
+
 class StudyDay(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(20))
     user_email = db.Column(db.String(100))
+
+class Question(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200))
+    difficulty = db.Column(db.String(20))
+    link = db.Column(db.String(300))
+    topic = db.Column(db.String(50))
+    solved = db.Column(db.Boolean, default=False)
+    user_email = db.Column(db.String(100))
+
+
 
 # =====================
 # Helper Functions
@@ -86,6 +117,25 @@ def calculate_streak(email):
         current -= timedelta(days=1)
 
     return streak
+
+def ensure_questions_for_user(email):
+    existing = Question.query.filter_by(user_email=email).first()
+
+    if existing:
+        return
+
+    for topic, questions in DEFAULT_QUESTIONS.items():
+        for title, diff, link in questions:
+            q = Question(
+                title=title,
+                difficulty=diff,
+                link=link,
+                topic=topic,
+                user_email=email
+            )
+            db.session.add(q)
+
+    db.session.commit()
 
 # =====================
 # Routes
@@ -145,6 +195,7 @@ def dashboard():
         return redirect(url_for("login"))
 
     ensure_topics_for_user(session["user"])
+    ensure_questions_for_user(session["user"])
 
     topics = DSATopic.query.filter_by(user_email=session["user"]).all()
 
@@ -260,20 +311,80 @@ def logout():
 @app.route("/delete-plan", methods=["POST"])
 def delete_plan():
     if "user" not in session:
-        return {"error": "Unauthorized"}, 401
+        return redirect(url_for("login"))
 
     plan_id = request.form["id"]
 
     plan = DailyPlan.query.get(plan_id)
 
-    # Safety check
-    if not plan or plan.user_email != session["user"]:
-        return {"error": "Not allowed"}, 403
+    if plan.user_email != session["user"]:
+        return "Unauthorized", 403
 
     db.session.delete(plan)
     db.session.commit()
 
-    return {"status": "deleted"}
+    return redirect(url_for("planner", date=plan.date))
+
+class DSAQuestion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topic = db.Column(db.String(50))
+    title = db.Column(db.String(200))
+    difficulty = db.Column(db.String(20))
+    link = db.Column(db.String(300))
+    solved = db.Column(db.Boolean, default=False)
+    notes = db.Column(db.Text)
+    user_email = db.Column(db.String(100))
+
+# ==========================
+# QUESTIONS SYSTEM
+# ==========================
+
+@app.route("/questions/<topic>")
+def view_questions(topic):
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    questions = Question.query.filter_by(
+        user_email=session["user"],
+        topic=topic
+    ).all()
+
+    return render_template(
+        "questions.html",
+        topic=topic,
+        questions=questions
+    )
+
+
+@app.route("/add-question", methods=["POST"])
+def add_question():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    q = Question(
+        title=request.form["title"],
+        difficulty=request.form["difficulty"],
+        link=request.form["link"],
+        topic=request.form["topic"],
+        user_email=session["user"]
+    )
+
+    db.session.add(q)
+    db.session.commit()
+
+    return redirect(url_for("view_questions", topic=request.form["topic"]))
+
+
+@app.route("/toggle-question", methods=["POST"])
+def toggle_question():
+    qid = request.form["id"]
+
+    q = Question.query.get(qid)
+    q.solved = not q.solved
+
+    db.session.commit()
+
+    return "OK"
 
 # =====================
 # Run App

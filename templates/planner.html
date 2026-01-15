@@ -30,32 +30,27 @@
 
 <!-- Tasks List -->
 <ul class="list-group">
-  {% for plan in plans %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      
-      <div>
-        <input
-          type="checkbox"
-          {% if plan.completed %}checked{% endif %}
-          onchange="togglePlan({{ plan.id }})"
-        >
-        <span class="{% if plan.completed %}text-decoration-line-through{% endif %}">
-          {{ plan.task }}
-        </span>
-      </div>
+{% for p in plans %}
+  <li class="list-group-item d-flex justify-content-between">
+    
+    <div>
+      <input type="checkbox"
+             onchange="togglePlan({{ p.id }})"
+             {% if p.completed %}checked{% endif %}>
+      {{ p.task }}
+    </div>
 
-      <button
-        class="btn btn-sm btn-outline-danger"
-        onclick="deletePlan({{ plan.id }})"
-      >
-        🗑️
+    <form action="/delete-plan" method="POST">
+      <input type="hidden" name="id" value="{{ p.id }}">
+      <button class="btn btn-sm btn-danger">
+        Delete
       </button>
+    </form>
 
-    </li>
-  {% else %}
-    <li class="list-group-item text-muted">No tasks for this day</li>
-  {% endfor %}
+  </li>
+{% endfor %}
 </ul>
+
 
 <script>
 function togglePlan(id) {

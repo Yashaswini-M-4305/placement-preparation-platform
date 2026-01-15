@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ topic }} Questions{% endblock %}
+
+{% block content %}
+
+<h3 class="mb-3">📘 {{ topic }} Questions</h3>
+
+<!-- Add Question Form -->
+<div class="card p-3 mb-4 shadow-sm">
+  <form action="/add-question" method="POST">
+    <input type="hidden" name="topic" value="{{ topic }}">
+
+    <div class="row">
+      <div class="col-md-4">
+        <input class="form-control" name="title" placeholder="Question title" required>
+      </div>
+
+      <div class="col-md-3">
+        <select name="difficulty" class="form-select">
+          <option>Easy</option>
+          <option>Medium</option>
+          <option>Hard</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <input class="form-control" name="link" placeholder="Leetcode / GFG link">
+      </div>
+
+      <div class="col-md-1">
+        <button class="btn btn-primary">Add</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Questions List -->
+<div class="card p-3 shadow-sm">
+  {% for q in questions %}
+  <div class="d-flex justify-content-between align-items-center border-bottom p-2">
+
+    <div>
+      <input type="checkbox"
+        {% if q.solved %}checked{% endif %}
+        onchange="toggleQ({{ q.id }})">
+
+      <strong>{{ q.title }}</strong>
+
+      <span class="badge bg-info">{{ q.difficulty }}</span>
+
+      {% if q.link %}
+        <a href="{{ q.link }}" target="_blank">🔗</a>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
+
+  {% if not questions %}
+    <p class="text-muted">No questions added yet</p>
+  {% endif %}
+</div>
+
+<script>
+function toggleQ(id) {
+  fetch("/toggle-question", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: "id=" + id
+  })
+}
+</script>
+
+{% endblock %}
