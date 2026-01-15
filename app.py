@@ -76,6 +76,17 @@ class StudyDay(db.Model):
     date = db.Column(db.String(20))
     user_email = db.Column(db.String(100))
 
+class DSAQuestion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topic = db.Column(db.String(50))
+    title = db.Column(db.String(200))
+    difficulty = db.Column(db.String(20))
+    link = db.Column(db.String(300))
+    solved = db.Column(db.Boolean, default=False)
+    notes = db.Column(db.Text)
+    user_email = db.Column(db.String(100))
+
+
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200))
@@ -223,24 +234,29 @@ def dashboard():
     )
 
 # ---------- Update Topic ----------
-@app.route("/update-topic", methods=["POST"])
-def update_topic():
+@app.route("/topic/<topic_name>")
+def topic_page(topic_name):
     if "user" not in session:
-        return {"error": "Unauthorized"}, 401
+        return redirect(url_for("login"))
 
-    topic_id = request.form["id"]
-    completed = request.form["completed"] == "true"
+    questions = Question.query.filter_by(
+        user_email=session["user"],
+        topic=topic_name
+    ).all()
 
-    topic = DSATopic.query.get(topic_id)
-    topic.completed = completed
-    db.session.commit()
+    total = len(questions)
+    done = len([q for q in questions if q.solved])
 
-    topics = DSATopic.query.filter_by(user_email=session["user"]).all()
-    total = len(topics)
-    done = len([t for t in topics if t.completed])
-    progress = int((done / total) * 100) if total else 0
+    percent = int((done / total) * 100) if total > 0 else 0
 
-    return {"progress": progress}
+    return render_template(
+        "topic.html",
+        questions=questions,
+        topic=topic_name,
+        total=total,
+        done=done,
+        percent=percent
+    )
 
 # ---------- Planner ----------
 @app.route("/planner")
@@ -325,15 +341,6 @@ def delete_plan():
 
     return redirect(url_for("planner", date=plan.date))
 
-class DSAQuestion(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    topic = db.Column(db.String(50))
-    title = db.Column(db.String(200))
-    difficulty = db.Column(db.String(20))
-    link = db.Column(db.String(300))
-    solved = db.Column(db.Boolean, default=False)
-    notes = db.Column(db.Text)
-    user_email = db.Column(db.String(100))
 
 # ==========================
 # QUESTIONS SYSTEM

@@ -5,7 +5,7 @@
 
 <h2 class="mb-4">Welcome, {{ session["user"] }} 👋</h2>
 
-<!-- 🔥 STREAK (DO NOT TOUCH WITH JS) -->
+<!-- 🔥 STREAK (STATIC – NO AUTO DISAPPEAR) -->
 <div class="badge bg-warning text-dark fs-6 p-3 mb-4">
   🔥 Study Streak:
   <strong>{{ streak }}</strong>
@@ -38,7 +38,8 @@
 </div>
 
 <div class="row">
-  <!-- DSA Tracker -->
+
+  <!-- ========== DSA TRACKER ========== -->
   <div class="col-md-6">
     <div class="card shadow-sm p-3 mb-4">
       <h4 class="text-primary">DSA Preparation Tracker</h4>
@@ -51,19 +52,20 @@
             {% if topic.completed %}checked{% endif %}
             onchange="updateTopic({{ topic.id }}, this.checked)"
           >
-        <label class="form-check-label">
-    <a href="/questions/{{ topic.topic }}" class="text-decoration-none">
-      {{ topic.topic }}
-    </a>
-  </label>
 
-          
+          <!-- ✅ FIXED LINK -->
+          <label class="form-check-label">
+            <a href="/topic/{{ topic.topic }}" class="text-decoration-none fw-semibold">
+              {{ topic.topic }}
+            </a>
+          </label>
+
         </div>
       {% endfor %}
     </div>
   </div>
 
-  <!-- 📊 PROGRESS -->
+  <!-- ========== OVERALL PROGRESS ========== -->
   <div class="col-md-6">
     <div class="card shadow-sm p-3">
       <h4 class="text-success">Overall Progress</h4>
@@ -80,8 +82,10 @@
       <p>Keep going! Consistency beats talent 💪</p>
     </div>
   </div>
+
 </div>
 
+<!-- ========== AJAX FOR CHECKBOX UPDATE ========== -->
 <script>
 function updateTopic(id, completed) {
   fetch("/update-topic", {
