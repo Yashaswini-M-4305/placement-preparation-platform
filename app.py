@@ -31,23 +31,63 @@ DSA_TOPICS = [
 ]
 
 DEFAULT_QUESTIONS = {
+
 "Arrays": [
-    ("Two Sum", "Easy", "https://leetcode.com/problems/two-sum"),
-    ("Best Time to Buy and Sell Stock", "Easy", "https://leetcode.com/problems/best-time-to-buy-and-sell-stock"),
-    ("Maximum Subarray", "Medium", "https://leetcode.com/problems/maximum-subarray"),
+ ("Two Sum", "Easy", "https://leetcode.com/problems/two-sum"),
+ ("Best Time to Buy and Sell Stock", "Easy", "https://leetcode.com/problems/best-time-to-buy-and-sell-stock"),
+ ("Product of Array Except Self", "Medium", "https://leetcode.com/problems/product-of-array-except-self"),
 ],
 
 "Strings": [
-    ("Valid Palindrome", "Easy", "https://leetcode.com/problems/valid-palindrome"),
-    ("Longest Substring Without Repeating Characters", "Medium",
-     "https://leetcode.com/problems/longest-substring-without-repeating-characters"),
+ ("Valid Palindrome", "Easy", "https://leetcode.com/problems/valid-palindrome"),
+ ("Longest Substring Without Repeating Characters", "Medium",
+  "https://leetcode.com/problems/longest-substring-without-repeating-characters"),
+ ("Valid Anagram", "Easy", "https://leetcode.com/problems/valid-anagram"),
 ],
 
 "Linked List": [
-    ("Reverse Linked List", "Easy", "https://leetcode.com/problems/reverse-linked-list"),
-    ("Merge Two Sorted Lists", "Easy", "https://leetcode.com/problems/merge-two-sorted-lists"),
+ ("Reverse Linked List", "Easy", "https://leetcode.com/problems/reverse-linked-list"),
+ ("Merge Two Sorted Lists", "Easy", "https://leetcode.com/problems/merge-two-sorted-lists"),
+],
+
+"Stack": [
+ ("Valid Parentheses", "Easy", "https://leetcode.com/problems/valid-parentheses"),
+ ("Min Stack", "Medium", "https://leetcode.com/problems/min-stack"),
+],
+
+"Queue": [
+ ("Implement Queue using Stacks", "Easy",
+  "https://leetcode.com/problems/implement-queue-using-stacks"),
+],
+
+"Recursion": [
+ ("Fibonacci Number", "Easy", "https://leetcode.com/problems/fibonacci-number"),
+],
+
+"Binary Search": [
+ ("Binary Search", "Easy", "https://leetcode.com/problems/binary-search"),
+ ("Search Insert Position", "Easy", "https://leetcode.com/problems/search-insert-position"),
+],
+
+"Sorting": [
+ ("Merge Sorted Array", "Easy", "https://leetcode.com/problems/merge-sorted-array"),
+],
+
+"Hashing": [
+ ("Contains Duplicate", "Easy", "https://leetcode.com/problems/contains-duplicate"),
+],
+
+"Trees": [
+ ("Maximum Depth of Binary Tree", "Easy",
+  "https://leetcode.com/problems/maximum-depth-of-binary-tree"),
+],
+
+"Graphs": [
+ ("Number of Islands", "Medium", "https://leetcode.com/problems/number-of-islands"),
 ]
+
 }
+
 
 # =====================
 # Models
@@ -130,21 +170,26 @@ def calculate_streak(email):
     return streak
 
 def ensure_questions_for_user(email):
-    existing = Question.query.filter_by(user_email=email).first()
-
-    if existing:
-        return
 
     for topic, questions in DEFAULT_QUESTIONS.items():
+
         for title, diff, link in questions:
-            q = Question(
+
+            exists = Question.query.filter_by(
+                user_email=email,
                 title=title,
-                difficulty=diff,
-                link=link,
-                topic=topic,
-                user_email=email
-            )
-            db.session.add(q)
+                topic=topic
+            ).first()
+
+            if not exists:
+                q = Question(
+                    title=title,
+                    difficulty=diff,
+                    link=link,
+                    topic=topic,
+                    user_email=email
+                )
+                db.session.add(q)
 
     db.session.commit()
 
@@ -421,6 +466,26 @@ def toggle_question():
     db.session.commit()
 
     return "OK"
+
+@app.route("/delete-question", methods=["POST"])
+def delete_question():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    qid = request.form["id"]
+
+    q = Question.query.get(qid)
+
+    # security check
+    if q.user_email != session["user"]:
+        return "Unauthorized", 403
+
+    topic = q.topic
+
+    db.session.delete(q)
+    db.session.commit()
+
+    return redirect(url_for("view_questions", topic=topic))
 
 # =====================
 # Run App

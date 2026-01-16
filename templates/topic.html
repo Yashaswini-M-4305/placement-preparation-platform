@@ -1,7 +1,18 @@
-{% extends "base.html" %}
-{% block title %}{{ topic }}{% endblock %}
+<div class="card p-3 mb-4">
+  <h4>{{ topic }} Progress</h4>
 
-{% block content %}
+  <p>
+    Solved {{ done }} out of {{ total }}
+  </p>
+
+  <div class="progress">
+    <div class="progress-bar"
+         style="width: {{ percent }}%">
+      {{ percent }}%
+    </div>
+  </div>
+</div>
+
 
 <h2 class="mb-3">{{ topic }} – Practice</h2>
 

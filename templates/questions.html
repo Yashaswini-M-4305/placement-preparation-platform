@@ -36,30 +36,67 @@
 
 <!-- Questions List -->
 <div class="card p-3 shadow-sm">
+
   {% for q in questions %}
   <div class="d-flex justify-content-between align-items-center border-bottom p-2">
 
+    <!-- LEFT SIDE -->
     <div>
-      <input type="checkbox"
+      <input
+        class="form-check-input me-2"
+        type="checkbox"
         {% if q.solved %}checked{% endif %}
-        onchange="toggleQ({{ q.id }})">
+        onchange="toggleQ({{ q.id }})"
+      >
 
       <strong>{{ q.title }}</strong>
 
-      <span class="badge bg-info">{{ q.difficulty }}</span>
+      <span class="badge bg-info ms-1">
+        {{ q.difficulty }}
+      </span>
 
       {% if q.link %}
-        <a href="{{ q.link }}" target="_blank">🔗</a>
+        <a href="{{ q.link }}" target="_blank" class="ms-2">
+          🔗
+        </a>
       {% endif %}
     </div>
+
+    <!-- RIGHT SIDE → DELETE -->
+    <form action="/delete-question" method="post" class="m-0">
+      <input type="hidden" name="id" value="{{ q.id }}">
+
+      <button class="btn btn-sm btn-outline-danger">
+        Delete
+      </button>
+    </form>
 
   </div>
   {% endfor %}
 
   {% if not questions %}
-    <p class="text-muted">No questions added yet</p>
+    <p class="text-muted text-center mt-3">
+      No questions added yet
+    </p>
   {% endif %}
+
 </div>
+
+
+<!-- AJAX TOGGLE -->
+<script>
+function toggleQ(id) {
+  fetch("/toggle-question", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: `id=${id}`
+  });
+}
+</script>
+
+
 
 <script>
 function toggleQ(id) {
