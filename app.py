@@ -391,6 +391,23 @@ def toggle_plan():
 
     return "OK"
 
+@app.route("/toggle-question/<int:id>", methods=["POST"])
+def toggle_question(id):
+
+    if "user" not in session:
+        return {"error": "login required"}, 401
+
+    q = Question.query.get(id)
+
+    # security check
+    if q.user_email != session["user"]:
+        return {"error": "unauthorized"}, 403
+
+    q.solved = not q.solved
+    db.session.commit()
+
+    return {"status": "ok"}
+
 # ---------- Logout ----------
 @app.route("/logout")
 def logout():
@@ -455,17 +472,6 @@ def add_question():
 
     return redirect(url_for("view_questions", topic=request.form["topic"]))
 
-
-@app.route("/toggle-question", methods=["POST"])
-def toggle_question():
-    qid = request.form["id"]
-
-    q = Question.query.get(qid)
-    q.solved = not q.solved
-
-    db.session.commit()
-
-    return "OK"
 
 @app.route("/delete-question", methods=["POST"])
 def delete_question():
