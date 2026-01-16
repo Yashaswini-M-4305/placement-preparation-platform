@@ -3,6 +3,7 @@
 
 {% block content %}
 
+
 <h2 class="mb-3">📘 {{ topic }}</h2>
 
 <div class="card p-3 shadow-sm mb-3">
@@ -30,6 +31,8 @@
         {% if q.solved %}checked{% endif %}
         onchange="toggleQ({{ q.id }})">
 
+      
+
       <strong>{{ q.title }}</strong>
 
       <span class="badge bg-info">{{ q.difficulty }}</span>
@@ -51,12 +54,15 @@
 
 <script>
 function toggleQ(id) {
-  fetch("/toggle-question/" + id)
+  fetch("/toggle-question/" + id, {
+    method: "POST"
+  })
   .then(res => res.json())
   .then(data => {
-    location.reload();
+    location.reload();   // refresh to update progress bar
   });
 }
 </script>
+
 
 {% endblock %}

@@ -55,11 +55,12 @@
         {{ q.difficulty }}
       </span>
 
-      {% if q.link %}
-        <a href="{{ q.link }}" target="_blank" class="ms-2">
-          🔗
-        </a>
-      {% endif %}
+     {% if q.link %}
+  <a href="{{ q.link.strip() }}" target="_blank" rel="noopener">
+    🔗 Open Problem
+  </a>
+{% endif %}
+
     </div>
 
     <!-- RIGHT SIDE → DELETE -->

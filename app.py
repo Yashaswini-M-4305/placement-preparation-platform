@@ -31,63 +31,50 @@ DSA_TOPICS = [
 ]
 
 DEFAULT_QUESTIONS = {
-
-"Arrays": [
- ("Two Sum", "Easy", "https://leetcode.com/problems/two-sum"),
- ("Best Time to Buy and Sell Stock", "Easy", "https://leetcode.com/problems/best-time-to-buy-and-sell-stock"),
- ("Product of Array Except Self", "Medium", "https://leetcode.com/problems/product-of-array-except-self"),
-],
-
-"Strings": [
- ("Valid Palindrome", "Easy", "https://leetcode.com/problems/valid-palindrome"),
- ("Longest Substring Without Repeating Characters", "Medium",
-  "https://leetcode.com/problems/longest-substring-without-repeating-characters"),
- ("Valid Anagram", "Easy", "https://leetcode.com/problems/valid-anagram"),
-],
-
-"Linked List": [
- ("Reverse Linked List", "Easy", "https://leetcode.com/problems/reverse-linked-list"),
- ("Merge Two Sorted Lists", "Easy", "https://leetcode.com/problems/merge-two-sorted-lists"),
-],
-
-"Stack": [
- ("Valid Parentheses", "Easy", "https://leetcode.com/problems/valid-parentheses"),
- ("Min Stack", "Medium", "https://leetcode.com/problems/min-stack"),
-],
-
-"Queue": [
- ("Implement Queue using Stacks", "Easy",
-  "https://leetcode.com/problems/implement-queue-using-stacks"),
-],
-
-"Recursion": [
- ("Fibonacci Number", "Easy", "https://leetcode.com/problems/fibonacci-number"),
-],
-
-"Binary Search": [
- ("Binary Search", "Easy", "https://leetcode.com/problems/binary-search"),
- ("Search Insert Position", "Easy", "https://leetcode.com/problems/search-insert-position"),
-],
-
-"Sorting": [
- ("Merge Sorted Array", "Easy", "https://leetcode.com/problems/merge-sorted-array"),
-],
-
-"Hashing": [
- ("Contains Duplicate", "Easy", "https://leetcode.com/problems/contains-duplicate"),
-],
-
-"Trees": [
- ("Maximum Depth of Binary Tree", "Easy",
-  "https://leetcode.com/problems/maximum-depth-of-binary-tree"),
-],
-
-"Graphs": [
- ("Number of Islands", "Medium", "https://leetcode.com/problems/number-of-islands"),
-]
-
+    "Arrays": [
+        ("Two Sum", "Easy", "https://leetcode.com/problems/two-sum"),
+        ("Best Time to Buy and Sell Stock", "Easy", "https://leetcode.com/problems/best-time-to-buy-and-sell-stock"),
+        ("Product of Array Except Self", "Medium", "https://leetcode.com/problems/product-of-array-except-self"),
+    ],
+    "Strings": [
+        ("Valid Palindrome", "Easy", "https://leetcode.com/problems/valid-palindrome"),
+        ("Longest Substring Without Repeating Characters", "Medium",
+         "https://leetcode.com/problems/longest-substring-without-repeating-characters"),
+        ("Valid Anagram", "Easy", "https://leetcode.com/problems/valid-anagram"),
+    ],
+    "Linked List": [
+        ("Reverse Linked List", "Easy", "https://leetcode.com/problems/reverse-linked-list"),
+        ("Merge Two Sorted Lists", "Easy", "https://leetcode.com/problems/merge-two-sorted-lists"),
+    ],
+    "Stack": [
+        ("Valid Parentheses", "Easy", "https://leetcode.com/problems/valid-parentheses"),
+        ("Min Stack", "Medium", "https://leetcode.com/problems/min-stack"),
+    ],
+    "Queue": [
+        ("Implement Queue using Stacks", "Easy",
+         "https://leetcode.com/problems/implement-queue-using-stacks"),
+    ],
+    "Recursion": [
+        ("Fibonacci Number", "Easy", "https://leetcode.com/problems/fibonacci-number"),
+    ],
+    "Binary Search": [
+        ("Binary Search", "Easy", "https://leetcode.com/problems/binary-search"),
+        ("Search Insert Position", "Easy", "https://leetcode.com/problems/search-insert-position"),
+    ],
+    "Sorting": [
+        ("Merge Sorted Array", "Easy", "https://leetcode.com/problems/merge-sorted-array"),
+    ],
+    "Hashing": [
+        ("Contains Duplicate", "Easy", "https://leetcode.com/problems/contains-duplicate"),
+    ],
+    "Trees": [
+        ("Maximum Depth of Binary Tree", "Easy",
+         "https://leetcode.com/problems/maximum-depth-of-binary-tree"),
+    ],
+    "Graphs": [
+        ("Number of Islands", "Medium", "https://leetcode.com/problems/number-of-islands")
+    ]
 }
-
 
 # =====================
 # Models
@@ -110,7 +97,6 @@ class DailyPlan(db.Model):
     completed = db.Column(db.Boolean, default=False)
     user_email = db.Column(db.String(100))
 
-
 class StudyDay(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(20))
@@ -126,7 +112,6 @@ class DSAQuestion(db.Model):
     notes = db.Column(db.Text)
     user_email = db.Column(db.String(100))
 
-
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200))
@@ -135,8 +120,6 @@ class Question(db.Model):
     topic = db.Column(db.String(50))
     solved = db.Column(db.Boolean, default=False)
     user_email = db.Column(db.String(100))
-
-
 
 # =====================
 # Helper Functions
@@ -170,11 +153,8 @@ def calculate_streak(email):
     return streak
 
 def ensure_questions_for_user(email):
-
     for topic, questions in DEFAULT_QUESTIONS.items():
-
         for title, diff, link in questions:
-
             exists = Question.query.filter_by(
                 user_email=email,
                 title=title,
@@ -190,7 +170,6 @@ def ensure_questions_for_user(email):
                     user_email=email
                 )
                 db.session.add(q)
-
     db.session.commit()
 
 # =====================
@@ -218,6 +197,7 @@ def signup():
         db.session.commit()
 
         ensure_topics_for_user(email)
+        ensure_questions_for_user(email)
 
         session["user"] = email
         flash("Account created successfully 🎉", "success")
@@ -250,62 +230,45 @@ def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
 
-    ensure_topics_for_user(session["user"])
-    ensure_questions_for_user(session["user"])
+    email = session["user"]
 
-    # ---- NEW LOGIC ----
-    topics = DSA_TOPICS
-
-    topic_progress = []
-
-    for t in topics:
-        questions = Question.query.filter_by(
-            user_email=session["user"],
-            topic=t
-        ).all()
-
-        total = len(questions)
-        done = len([q for q in questions if q.solved])
-
+    # Topic wise progress
+    topics = []
+    for t in DSA_TOPICS:
+        total = Question.query.filter_by(user_email=email, topic=t).count()
+        done = Question.query.filter_by(user_email=email, topic=t, solved=True).count()
         percent = int((done / total) * 100) if total > 0 else 0
-
-        topic_progress.append({
+        topics.append({
             "name": t,
             "total": total,
             "done": done,
             "percent": percent
         })
 
-    # Overall progress
-    all_q = Question.query.filter_by(user_email=session["user"]).all()
-    all_total = len(all_q)
-    all_done = len([q for q in all_q if q.solved])
-
-    overall_progress = int((all_done / all_total) * 100) if all_total else 0
+    # OVERALL PROGRESS
+    all_questions = Question.query.filter_by(user_email=email).all()
+    total_q = len(all_questions)
+    done_q = len([q for q in all_questions if q.solved])
+    progress = int((done_q / total_q) * 100) if total_q > 0 else 0
 
     # Planner + streak
     today = str(date.today())
     today_plans = DailyPlan.query.filter_by(
-        user_email=session["user"],
+        user_email=email,
         date=today
     ).all()
-
     today_done = len([p for p in today_plans if p.completed])
     today_total = len(today_plans)
-
-    streak = calculate_streak(session["user"])
+    streak = calculate_streak(email)
 
     return render_template(
         "dashboard.html",
-
-        topics=topic_progress,          # ← NEW STRUCTURE
-        progress=overall_progress,      # ← OVERALL %
-
+        topics=topics,
+        progress=progress,
         today_done=today_done,
         today_total=today_total,
         streak=streak
     )
-
 
 # ---------- Update Topic ----------
 @app.route("/topic/<topic_name>")
@@ -320,7 +283,6 @@ def topic_page(topic_name):
 
     total = len(questions)
     done = len([q for q in questions if q.solved])
-
     percent = int((done / total) * 100) if total > 0 else 0
 
     return render_template(
@@ -339,7 +301,6 @@ def planner():
         return redirect(url_for("login"))
 
     selected_date = request.args.get("date", str(date.today()))
-
     plans = DailyPlan.query.filter_by(
         user_email=session["user"],
         date=selected_date
@@ -370,30 +331,8 @@ def add_plan():
 
     return redirect(url_for("planner", date=date_selected))
 
-@app.route("/toggle-plan", methods=["POST"])
-def toggle_plan():
-    plan = DailyPlan.query.get(request.form["id"])
-    plan.completed = not plan.completed
-    db.session.commit()
-
-    if plan.completed:
-        today = str(date.today())
-        exists = StudyDay.query.filter_by(
-            user_email=session["user"],
-            date=today
-        ).first()
-
-        if not exists:
-            db.session.add(
-                StudyDay(date=today, user_email=session["user"])
-            )
-            db.session.commit()
-
-    return "OK"
-
 @app.route("/toggle-question/<int:id>", methods=["POST"])
 def toggle_question(id):
-
     if "user" not in session:
         return {"error": "login required"}, 401
 
@@ -406,6 +345,17 @@ def toggle_question(id):
     q.solved = not q.solved
     db.session.commit()
 
+    return {"status": "ok"}
+
+@app.route("/toggle-plan/<int:id>", methods=["POST"])
+def toggle_plan(id):
+    if "user" not in session:
+        return {"error": "login required"}, 401
+    plan = DailyPlan.query.get(id)
+    if plan.user_email != session["user"]:
+        return {"error": "unauthorized"}, 403
+    plan.completed = not plan.completed
+    db.session.commit()
     return {"status": "ok"}
 
 # ---------- Logout ----------
@@ -421,7 +371,6 @@ def delete_plan():
         return redirect(url_for("login"))
 
     plan_id = request.form["id"]
-
     plan = DailyPlan.query.get(plan_id)
 
     if plan.user_email != session["user"]:
@@ -432,11 +381,9 @@ def delete_plan():
 
     return redirect(url_for("planner", date=plan.date))
 
-
 # ==========================
 # QUESTIONS SYSTEM
 # ==========================
-
 @app.route("/questions/<topic>")
 def view_questions(topic):
     if "user" not in session:
@@ -452,7 +399,6 @@ def view_questions(topic):
         topic=topic,
         questions=questions
     )
-
 
 @app.route("/add-question", methods=["POST"])
 def add_question():
@@ -472,26 +418,48 @@ def add_question():
 
     return redirect(url_for("view_questions", topic=request.form["topic"]))
 
-
 @app.route("/delete-question", methods=["POST"])
 def delete_question():
     if "user" not in session:
-        return redirect(url_for("login"))
+        return "Unauthorized", 401
 
     qid = request.form["id"]
-
     q = Question.query.get(qid)
 
-    # security check
+    # Security: ensure user owns this question
     if q.user_email != session["user"]:
-        return "Unauthorized", 403
-
-    topic = q.topic
+        return "Not allowed", 403
 
     db.session.delete(q)
     db.session.commit()
 
-    return redirect(url_for("view_questions", topic=topic))
+    return "OK"
+
+# ---------- UPDATE TOPIC PROGRESS ----------
+@app.route("/update-topic", methods=["POST"])
+def update_topic():
+    if "user" not in session:
+        return {"progress": 0}
+
+    topic_id = request.form["id"]
+    completed = request.form["completed"] == "true"
+
+    topic = DSATopic.query.get(topic_id)
+
+    # security check
+    if topic.user_email != session["user"]:
+        return {"progress": 0}
+
+    topic.completed = completed
+    db.session.commit()
+
+    # Recalculate progress
+    topics = DSATopic.query.filter_by(user_email=session["user"]).all()
+    total = len(topics)
+    done = len([t for t in topics if t.completed])
+    progress = int((done / total) * 100) if total else 0
+
+    return {"progress": progress}
 
 # =====================
 # Run App

@@ -88,5 +88,11 @@ function togglePlan(id) {
   });
 }
 </script>
+<script>
+function togglePlan(id) {
+  fetch("/toggle-plan/" + id, { method: "POST" })
+    .then(() => location.reload());
+}
+</script>
 
 {% endblock %}
