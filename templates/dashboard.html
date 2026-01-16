@@ -5,7 +5,7 @@
 
 <h2 class="mb-4">Welcome, {{ session["user"] }} 👋</h2>
 
-<!-- 🔥 STREAK (STATIC – NO AUTO DISAPPEAR) -->
+<!-- 🔥 STREAK -->
 <div class="badge bg-warning text-dark fs-6 p-3 mb-4">
   🔥 Study Streak:
   <strong>{{ streak }}</strong>
@@ -37,33 +37,39 @@
   </div>
 </div>
 
+
 <div class="row">
 
-  <!-- ========== DSA TRACKER ========== -->
+  <!-- ========== DSA TRACKER (NEW) ========== -->
   <div class="col-md-6">
     <div class="card shadow-sm p-3 mb-4">
       <h4 class="text-primary">DSA Preparation Tracker</h4>
 
-      {% for topic in topics %}
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            {% if topic.completed %}checked{% endif %}
-            onchange="updateTopic({{ topic.id }}, this.checked)"
-          >
+      {% for t in topics %}
 
-          <!-- ✅ FIXED LINK -->
-          <label class="form-check-label">
-            <a href="/topic/{{ topic.topic }}" class="text-decoration-none fw-semibold">
-              {{ topic.topic }}
-            </a>
-          </label>
+      <div class="mb-3">
 
+        <div class="d-flex justify-content-between">
+          <a href="/topic/{{ t.name }}" class="fw-semibold text-decoration-none">
+            {{ t.name }}
+          </a>
+
+          <span>{{ t.done }} / {{ t.total }}</span>
         </div>
+
+        <div class="progress">
+          <div class="progress-bar bg-info"
+               style="width: {{ t.percent }}%">
+            {{ t.percent }}%
+          </div>
+        </div>
+
+      </div>
+
       {% endfor %}
     </div>
   </div>
+
 
   <!-- ========== OVERALL PROGRESS ========== -->
   <div class="col-md-6">
@@ -84,24 +90,5 @@
   </div>
 
 </div>
-
-<!-- ========== AJAX FOR CHECKBOX UPDATE ========== -->
-<script>
-function updateTopic(id, completed) {
-  fetch("/update-topic", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: `id=${id}&completed=${completed}`
-  })
-  .then(res => res.json())
-  .then(data => {
-    const bar = document.getElementById("progress-bar");
-    bar.style.width = data.progress + "%";
-    bar.innerText = data.progress + "%";
-  });
-}
-</script>
 
 {% endblock %}

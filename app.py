@@ -208,12 +208,37 @@ def dashboard():
     ensure_topics_for_user(session["user"])
     ensure_questions_for_user(session["user"])
 
-    topics = DSATopic.query.filter_by(user_email=session["user"]).all()
+    # ---- NEW LOGIC ----
+    topics = DSA_TOPICS
 
-    total = len(topics)
-    done = len([t for t in topics if t.completed])
-    progress = int((done / total) * 100) if total else 0
+    topic_progress = []
 
+    for t in topics:
+        questions = Question.query.filter_by(
+            user_email=session["user"],
+            topic=t
+        ).all()
+
+        total = len(questions)
+        done = len([q for q in questions if q.solved])
+
+        percent = int((done / total) * 100) if total > 0 else 0
+
+        topic_progress.append({
+            "name": t,
+            "total": total,
+            "done": done,
+            "percent": percent
+        })
+
+    # Overall progress
+    all_q = Question.query.filter_by(user_email=session["user"]).all()
+    all_total = len(all_q)
+    all_done = len([q for q in all_q if q.solved])
+
+    overall_progress = int((all_done / all_total) * 100) if all_total else 0
+
+    # Planner + streak
     today = str(date.today())
     today_plans = DailyPlan.query.filter_by(
         user_email=session["user"],
@@ -222,16 +247,20 @@ def dashboard():
 
     today_done = len([p for p in today_plans if p.completed])
     today_total = len(today_plans)
+
     streak = calculate_streak(session["user"])
 
     return render_template(
         "dashboard.html",
-        topics=topics,
-        progress=progress,
+
+        topics=topic_progress,          # ← NEW STRUCTURE
+        progress=overall_progress,      # ← OVERALL %
+
         today_done=today_done,
         today_total=today_total,
         streak=streak
     )
+
 
 # ---------- Update Topic ----------
 @app.route("/topic/<topic_name>")
