@@ -3,23 +3,35 @@ from flask import Flask, render_template, request, redirect, session, url_for, f
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date, timedelta
-import os
+from sqlalchemy import text
+
 # =====================
 # App Config
 # =====================
 app = Flask(__name__)
-app.secret_key = "secret_key_here"
+app.secret_key = os.getenv("SECRET_KEY", "secret_key_here")
 
-# Database configuration
+# ----- DATABASE FIX -----
+uri = os.getenv("DATABASE_URL")
 
-uri = os.getenv("DATABASE_URL", "sqlite:///database.db")
+if not uri:
+    uri = "sqlite:///database.db"
 
+# Render gives postgres:// → SQLAlchemy needs postgresql://
 if uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = uri
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db = SQLAlchemy(app)
+
+db = SQLAlchemy()
+
+def init_db(app):
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+
+init_db(app)
 
 # =====================
 # DSA Topics (Global)
@@ -473,6 +485,14 @@ def update_topic():
 def init_db():
     db.create_all()
     return "Database tables created successfully!"
+
+@app.route("/testdb")
+def testdb():
+    try:
+        db.session.execute(text("SELECT 1"))
+        return "DB Connected!"
+    except Exception as e:
+        return f"DB ERROR: {str(e)}"
 
 # =====================
 # Run App
