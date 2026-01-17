@@ -12,16 +12,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "secret_key_here")
 
 # ----- DATABASE FIX -----
-uri = os.getenv("DATABASE_URL")
-
-if not uri:
-    uri = "sqlite:///database.db"
-
-# Render gives postgres:// → SQLAlchemy needs postgresql://
-if uri.startswith("postgres://"):
-    uri = uri.replace("postgres://", "postgresql://", 1)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = uri
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy()
@@ -482,7 +473,7 @@ def update_topic():
     return {"progress": progress}
 
 @app.route("/init-db")
-def init_db():
+def init_db_route():
     db.create_all()
     return "Database tables created successfully!"
 
