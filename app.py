@@ -108,10 +108,6 @@ class DailyPlan(db.Model):
     completed = db.Column(db.Boolean, default=False)
     user_email = db.Column(db.String(100))
 
-class StudyDay(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.String(20))
-    user_email = db.Column(db.String(100))
 
 class DSAQuestion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -151,17 +147,27 @@ def ensure_topics_for_user(email):
     db.session.commit()
 
 def calculate_streak(email):
-    days = StudyDay.query.filter_by(user_email=email).all()
-    dates = set(d.date for d in days)
-
     streak = 0
     current = date.today()
 
-    while str(current) in dates:
-        streak += 1
-        current -= timedelta(days=1)
+    while True:
+        day = str(current)
+
+        # Check if ANY plan on that day is completed
+        completed_task = DailyPlan.query.filter_by(
+            user_email=email,
+            date=day,
+            completed=True
+        ).first()
+
+        if completed_task:
+            streak += 1
+            current -= timedelta(days=1)
+        else:
+            break
 
     return streak
+
 
 def ensure_questions_for_user(email):
     for topic, questions in DEFAULT_QUESTIONS.items():
