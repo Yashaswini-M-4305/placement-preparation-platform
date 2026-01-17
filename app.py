@@ -10,11 +10,14 @@ import os
 app = Flask(__name__)
 app.secret_key = "secret_key_here"
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///database.db"
-)
+# Database configuration
 
+uri = os.getenv("DATABASE_URL", "sqlite:///database.db")
+
+if uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = uri
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
@@ -465,6 +468,11 @@ def update_topic():
     progress = int((done / total) * 100) if total else 0
 
     return {"progress": progress}
+
+@app.route("/init-db")
+def init_db():
+    db.create_all()
+    return "Database tables created successfully!"
 
 # =====================
 # Run App
